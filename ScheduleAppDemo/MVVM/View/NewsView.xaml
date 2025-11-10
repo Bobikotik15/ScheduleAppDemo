@@ -1,0 +1,110 @@
+﻿<UserControl x:Class="ScheduleAppDemo.MVVM.View.NewsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:ScheduleAppDemo.MVVM.View"
+             mc:Ignorable="d" 
+             d:DesignHeight="705" d:DesignWidth="880">
+    <Grid Margin="20,20,20,20">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition 
+               Height="500"/>
+        </Grid.RowDefinitions>
+        <Border
+            Grid.Row="0" 
+            CornerRadius="12" 
+            Background="#FF4BB1FD"
+            Margin="10,44,10,10" 
+            RenderTransformOrigin="0.0,0.0" 
+            >
+            <Border.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform/>
+                    <SkewTransform AngleX="0.14"/>
+                    <RotateTransform/>
+                    <TranslateTransform X="0.123"/>
+                </TransformGroup>
+            </Border.RenderTransform>
+        </Border>
+        <Border
+            Grid.Column="1"
+            CornerRadius="12" 
+            Background="#FF854EFF"
+          Margin="10,44,10,10" 
+    />
+        <Border
+        Grid.Column="2"
+        CornerRadius="12" 
+        Margin="10,44,10,10" 
+         RenderTransformOrigin="0.0,0.0" 
+            Background="#FFEDFF4E">
+
+            <Border.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform/>
+                    <SkewTransform AngleX="-0.562"/>
+                    <RotateTransform/>
+                    <TranslateTransform/>
+                </TransformGroup>
+            </Border.RenderTransform>
+
+        </Border>
+        <TextBlock Text="Новости" 
+                   Height="30"
+                   Margin="10,10,0,0"
+                   HorizontalAlignment="Left"
+                   VerticalAlignment="Top" 
+                   FontFamily="Arial Black" 
+                   FontSize="20" 
+                   Foreground="White"
+                   />
+        <Border
+            Grid.Row="1" 
+            CornerRadius="5"
+            Margin="10,10,10,10"
+            >
+            <Border.Background>
+                <LinearGradientBrush EndPoint="1,1" StartPoint="1,0">
+                    <GradientStop Color="#FF4BB1FD"/>
+                    <GradientStop Color="#FFFFD573"
+                                  Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+        </Border>
+        <Border
+    Grid.Row="1" 
+            Grid.Column="1"
+    CornerRadius="5"
+    Margin="10,10,10,10"
+    >
+            <Border.Background>
+                <LinearGradientBrush EndPoint="1,1" StartPoint="1,0">
+                    <GradientStop Color="#FF854EFF"/>
+                    <GradientStop Color="#FFEDFF4E"
+                                  Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+        </Border>
+        <Border
+    Grid.Row="1" 
+            Grid.Column="2"
+    CornerRadius="5"
+    Margin="10,10,10,10"
+    >
+            <Border.Background>
+                <LinearGradientBrush EndPoint="0,1" StartPoint="0,0">
+                    <GradientStop Color="#FFEDFF4E"/>
+                    <GradientStop Color="#FF7AD25B" 
+                                  Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+        </Border>
+    </Grid>
+</UserControl>
