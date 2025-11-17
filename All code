@@ -1,5 +1,5 @@
-весь код приложения : 
-папка Core (два отдельных класса) 
+весь код программы : 
+папка Core  (2 класса) : 
 
 namespace ScheduleAppDemo .Core
 {
@@ -61,10 +61,143 @@ namespace ScheduleAppDemo .Core
         }
     }
 }
+папка mvvm (4 папки) :
+папка Converters (2 класса) : 
 
-папка MVVM 
-1. Model 
-папка entitis (11 классов) 
+namespace ScheduleAppDemo .MVVM .Converters
+{
+    // Простой конвертер для статуса
+    public class BoolToStatusConverter : IValueConverter
+    {
+        private static BoolToStatusConverter _instance;
+        public static BoolToStatusConverter Instance
+        {
+            get
+            {
+                if ( _instance == null )
+                    _instance = new BoolToStatusConverter();
+                return _instance;
+            }
+        }
+
+        public object Convert (object value , Type targetType , object parameter , CultureInfo culture)
+        {
+            if ( value is bool isActive && isActive )
+                return "Активна";
+            return "Неактивна";
+        }
+
+        public object ConvertBack (object value , Type targetType , object parameter , CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    // Конвертер цвета для статуса
+    public class BoolToColorConverter : IValueConverter
+    {
+        private static BoolToColorConverter _instance;
+        public static BoolToColorConverter Instance
+        {
+            get
+            {
+                if ( _instance == null )
+                    _instance = new BoolToColorConverter();
+                return _instance;
+            }
+        }
+
+        public object Convert (object value , Type targetType , object parameter , CultureInfo culture)
+        {
+            if ( value is bool isActive && isActive )
+                return new SolidColorBrush(Color .FromRgb(76 , 175 , 80)); // Зеленый
+            return new SolidColorBrush(Color .FromRgb(244 , 67 , 54)); // Красный
+        }
+
+        public object ConvertBack (object value , Type targetType , object parameter , CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    // Конвертер цвета по курсу (временный заменитель)
+    public class YearToColorConverter : IValueConverter
+    {
+        private static YearToColorConverter _instance;
+        public static YearToColorConverter Instance
+        {
+            get
+            {
+                if ( _instance == null )
+                    _instance = new YearToColorConverter();
+                return _instance;
+            }
+        }
+
+        public object Convert (object value , Type targetType , object parameter , CultureInfo culture)
+        {
+            if ( value is int year )
+            {
+                switch ( year )
+                {
+                    case 1: return new SolidColorBrush(Color .FromRgb(33 , 150 , 243)); // Синий
+                    case 2: return new SolidColorBrush(Color .FromRgb(76 , 175 , 80));  // Зеленый
+                    case 3: return new SolidColorBrush(Color .FromRgb(255 , 152 , 0));  // Оранжевый
+                    case 4: return new SolidColorBrush(Color .FromRgb(156 , 39 , 176)); // Фиолетовый
+                    default: return new SolidColorBrush(Color .FromRgb(158 , 158 , 158)); // Серый
+                }
+            }
+            return new SolidColorBrush(Colors .Gray);
+        }
+
+        public object ConvertBack (object value , Type targetType , object parameter , CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+}
+
+namespace ScheduleAppDemo .MVVM .Converters
+{
+    public class StringToBrushConverter : IValueConverter
+    {
+        public object Convert (object value , Type targetType , object parameter , CultureInfo culture)
+        {
+            if ( value is string colorString && !string .IsNullOrEmpty(colorString) )
+            {
+                try
+                {
+                    return new SolidColorBrush((Color)ColorConverter .ConvertFromString(colorString));
+                }
+                catch
+                {
+                    return new SolidColorBrush(Colors .Gray);
+                }
+            }
+            return new SolidColorBrush(Colors .Gray);
+        }
+
+        public object ConvertBack (object value , Type targetType , object parameter , CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+}
+
+папка Model (1 класс + папка entitis) : 
+папака утешешы (12 классов) : 
+
+namespace ScheduleAppDemo .MVVM .Model .Entities
+{
+    public class AcademicWeek
+    {
+        public DateTime WeekStart { get; set; }
+        public DateTime WeekEnd { get; set; }
+        public int WeekNumber { get; set; }
+        public string DisplayName => $"Неделя {WeekNumber} ({WeekStart:dd.MM} - {WeekEnd:dd.MM})";
+        public bool IsCurrentWeek => DateTime .Now >= WeekStart && DateTime .Now <= WeekEnd;
+    }
+}
 
 namespace ScheduleAppDemo .MVVM .Model .Entities
 {
@@ -92,7 +225,6 @@ namespace ScheduleAppDemo .MVVM .Model .Entities
     }
 }
 
-
 namespace ScheduleAppDemo .MVVM .Model .Entities
 {
     public class Group
@@ -105,9 +237,11 @@ namespace ScheduleAppDemo .MVVM .Model .Entities
         public int? StudentCount { get; set; }
         public bool? IsActive { get; set; }
         public DateTime? CreatedDate { get; set; }
+        public Specialty Specialty { get; set; }
     }
 }
 
+namespace ScheduleAppDemo .MVVM .Model
 {
     public class Schedule
     {
@@ -130,26 +264,35 @@ namespace ScheduleAppDemo .MVVM .Model .Entities
         public virtual Subject Subject { get; set; }
         public virtual Teacher Teacher { get; set; }
         public virtual Classroom Classroom { get; set; }
+
     }
 }
 
-namespace ScheduleAppDemo .MVVM .Model .Entities
+namespace ScheduleAppDemo .Services
 {
-    public class ScheduleChange
+    public class ScheduleSyncService
     {
-        public int ChangeId { get; set; }
-        public int OriginalScheduleId { get; set; }
-        public int? NewSubjectId { get; set; }
-        public int? NewTeacherId { get; set; }
-        public int? NewClassroomId { get; set; }
-        public DateTime ChangeDate { get; set; }
-        public string Reason { get; set; }
-        public bool? IsCancelled { get; set; }
-        public DateTime? CreatedDate { get; set; }
+        private static ScheduleSyncService _instance;
+        public static ScheduleSyncService Instance
+        {
+            get
+            {
+                if ( _instance == null )
+                    _instance = new ScheduleSyncService();
+                return _instance;
+            }
+        }
+
+        public event Action<Group> ScheduleUpdated;
+
+        private ScheduleSyncService ( ) { }
+
+        public void NotifyScheduleUpdated (Group group)
+        {
+            ScheduleUpdated?.Invoke(group);
+        }
     }
 }
-
-
 namespace ScheduleAppDemo .MVVM .Model .Entities
 {
     public class Specialty
@@ -161,8 +304,6 @@ namespace ScheduleAppDemo .MVVM .Model .Entities
         public DateTime? CreatedDate { get; set; }
     }
 }
-
-
 namespace ScheduleAppDemo .MVVM .Model .Entities
 {
     public class StudyYear
@@ -172,7 +313,6 @@ namespace ScheduleAppDemo .MVVM .Model .Entities
         public string YearName { get; set; }
     }
 }
-
 
 namespace ScheduleAppDemo .MVVM .Model .Entities
 {
@@ -194,7 +334,6 @@ namespace ScheduleAppDemo .MVVM .Model .Entities
     }
 }
 
-
 namespace ScheduleAppDemo .MVVM .Model .Entities
 {
     public class SubjectCategory
@@ -205,7 +344,6 @@ namespace ScheduleAppDemo .MVVM .Model .Entities
         public int? DisplayOrder { get; set; }
     }
 }
-
 
 namespace ScheduleAppDemo .MVVM .Model .Entities
 {
@@ -220,7 +358,6 @@ namespace ScheduleAppDemo .MVVM .Model .Entities
     }
 }
 
-
 namespace ScheduleAppDemo .MVVM .Model .Entities
 {
     public class TimeSlot
@@ -232,15 +369,7 @@ namespace ScheduleAppDemo .MVVM .Model .Entities
         public int PeriodOrder { get; set; }
     }
 }
-
-Класс DataBaseHelper 
-using ScheduleAppDemo .MVVM .Model .Entities;
-using System;
-using System .Collections .Generic;
-using System .Data .SqlClient;
-using System .Linq;
-using System .Text;
-using System .Windows;
+отдельный класс Databasehelper : 
 
 namespace ScheduleAppDemo .MVVM .Model
 {
@@ -523,7 +652,91 @@ namespace ScheduleAppDemo .MVVM .Model
             }
             return results;
         }
+        // === ДЛЯ ГРУПП ===
+        public static List<Specialty> GetAllSpecialties ( )
+        {
+            return ExecuteReader<Specialty>(
+                "SELECT specialty_id, specialty_name, abbreviation, color, created_date FROM Specialties ORDER BY specialty_name" ,
+                reader => new Specialty
+                {
+                    SpecialtyId = reader .GetInt32(0) ,
+                    SpecialtyName = reader .GetString(1) ,
+                    Abbreviation = reader .GetString(2) ,
+                    Color = reader .GetString(3) ,
+                    CreatedDate = GetNullableDateTime(reader , 4)
+                }
+            );
+        }
 
+        public static bool AddGroup (Group group)
+        {
+            try
+            {
+                ExecuteNonQuery(@"
+            INSERT INTO Groups (group_name, specialty_id, enrollment_year, current_year, student_count, is_active, created_date)
+            VALUES (@GroupName, @SpecialtyId, @EnrollmentYear, @CurrentYear, @StudentCount, @IsActive, @CreatedDate)" ,
+                    new SqlParameter("@GroupName" , group .GroupName) ,
+                    new SqlParameter("@SpecialtyId" , group .SpecialtyId) ,
+                    new SqlParameter("@EnrollmentYear" , group .EnrollmentYear) ,
+                    new SqlParameter("@CurrentYear" , group .CurrentYear) ,
+                    new SqlParameter("@StudentCount" , (object)group .StudentCount ?? DBNull .Value) ,
+                    new SqlParameter("@IsActive" , (object)group .IsActive ?? DBNull .Value) ,
+                    new SqlParameter("@CreatedDate" , (object)group .CreatedDate ?? DBNull .Value)
+                );
+                return true;
+            }
+            catch ( Exception ex )
+            {
+                MessageBox .Show($"Ошибка добавления группы: {ex .Message}");
+                return false;
+            }
+        }
+
+        public static bool UpdateGroup (Group group)
+        {
+            try
+            {
+                ExecuteNonQuery(@"
+            UPDATE Groups 
+            SET group_name = @GroupName, 
+                specialty_id = @SpecialtyId, 
+                enrollment_year = @EnrollmentYear,
+                current_year = @CurrentYear,
+                student_count = @StudentCount,
+                is_active = @IsActive
+            WHERE group_id = @GroupId" ,
+                    new SqlParameter("@GroupId" , group .GroupId) ,
+                    new SqlParameter("@GroupName" , group .GroupName) ,
+                    new SqlParameter("@SpecialtyId" , group .SpecialtyId) ,
+                    new SqlParameter("@EnrollmentYear" , group .EnrollmentYear) ,
+                    new SqlParameter("@CurrentYear" , group .CurrentYear) ,
+                    new SqlParameter("@StudentCount" , (object)group .StudentCount ?? DBNull .Value) ,
+                    new SqlParameter("@IsActive" , (object)group .IsActive ?? DBNull .Value)
+                );
+                return true;
+            }
+            catch ( Exception ex )
+            {
+                MessageBox .Show($"Ошибка обновления группы: {ex .Message}");
+                return false;
+            }
+        }
+
+        public static bool DeleteGroup (int groupId)
+        {
+            try
+            {
+                ExecuteNonQuery("DELETE FROM Groups WHERE group_id = @GroupId" ,
+                    new SqlParameter("@GroupId" , groupId)
+                );
+                return true;
+            }
+            catch ( Exception ex )
+            {
+                MessageBox .Show($"Ошибка удаления группы: {ex .Message}");
+                return false;
+            }
+        }
         private static void ExecuteNonQuery (string query , params SqlParameter[] parameters)
         {
             try
@@ -564,6 +777,25 @@ namespace ScheduleAppDemo .MVVM .Model
                 MessageBox .Show($"Ошибка выполнения запроса: {ex .Message}");
                 return default(T);
             }
+        }
+        // === МЕТОДЫ ДЛЯ РАБОТЫ С ДАТАМИ ===
+        public static List<DateTime> GetAcademicYearWeeks (DateTime startDate , int weeksCount)
+        {
+            var weeks = new List<DateTime>();
+            for ( int i = 0 ; i < weeksCount ; i++ )
+            {
+                weeks .Add(startDate .AddDays(i * 7));
+            }
+            return weeks;
+        }
+
+        public static int GetCurrentWeekNumber (DateTime date)
+        {
+            var jan1 = new DateTime(date .Year , 1 , 1);
+            var daysOffset = DayOfWeek .Monday - jan1 .DayOfWeek;
+            var firstMonday = jan1 .AddDays(daysOffset);
+            var weekNum = (date - firstMonday) .Days / 7 + 1;
+            return weekNum;
         }
 
         // Методы для работы с nullable значениями
@@ -618,7 +850,752 @@ namespace ScheduleAppDemo .MVVM .Model
     }
 }
 
-ПАПКА view : 
+папака View (6 Viewvs) : 
+<UserControl x:Class="ScheduleAppDemo.MVVM.View.LoginView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:ScheduleAppDemo.MVVM.View" 
+             xmlns:viewmodel="clr-namespace:ScheduleAppDemo.MVVM.ViewModel"
+             mc:Ignorable="d" 
+             d:DesignHeight="705" d:DesignWidth="880">
+    <Border 
+        Margin="200,30,200,30"
+        CornerRadius="30"
+       >
+        <Border.Background>
+            <LinearGradientBrush EndPoint="0,1" StartPoint="0,0">
+                <GradientStop Color="#FF8C2CF1"/>
+                <GradientStop Color="#FFB583F3" Offset="1"/>
+            </LinearGradientBrush>
+        </Border.Background>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="290"/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="100"/>
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <Border
+              Height="500"
+              Width="400" 
+              Margin="48,35,32,10"
+              Grid.Row="1" 
+              CornerRadius="50"
+              Opacity="0.25" 
+                Grid.ColumnSpan="3">
+                <Border.Background>
+                    <LinearGradientBrush EndPoint="0,1" StartPoint="0,0">
+                        <GradientStop Color="#FFFFB289"/>
+                        <GradientStop Color="White" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+            </Border>
+            <TextBlock 
+                Text="Вход в систему"
+                Grid.Column="1"
+                FontFamily="Arial Black" 
+                FontSize="30"
+                HorizontalAlignment="Center" 
+                Foreground="White" 
+                VerticalAlignment="Center" Width="270"/>
+            <StackPanel
+                Grid.Row="1"
+                Grid.Column="1">
+                <TextBlock 
+                    Text="Логин" 
+                    FontSize="20"
+                    Margin="0,150,0,0"
+                    Foreground="White"
+                    FontWeight="Bold"
+                    />
+                <TextBox
+                    
+                 IsEnabled="True" 
+                 Focusable="True"
+                    x:Name="Logintxtbox" 
+                    Style="{StaticResource RoundedTextBoxStyle}"
+                         Width="290" 
+                         Height="40"
+                    Margin="0,5,0,0" FontSize="20"
+                    FontFamily="Arial Black"
+                    BorderBrush="#FFFFB289"
+                    Text="{Binding UserLogin, UpdateSourceTrigger= PropertyChanged}"/>
+
+
+                <TextBlock
+                    Text="Пароль"
+                    FontWeight="Bold"
+                    Foreground="White"
+                    FontSize="20" 
+                    Margin="0,40,0,0"
+                           />
+                <PasswordBox
+    x:Name="PasswordboxLogin" 
+    Style="{StaticResource RoundedTextBoxStyle}"
+    Height="40"
+    FontSize="20"
+    FontFamily="Segoe UI Black"
+    BorderBrush="#FFFFB289"
+                    />
+                <Grid>
+                    <Button x:Name="ButtonOKLogin" 
+                     Style="{DynamicResource ShadowButtonStyle}"
+                          Content="ОК"
+                          Height="50" 
+                          Background="#FFFFB289" 
+                          Margin="175,20,10,5" 
+                          Foreground="White" 
+                          FontFamily="Arial Black" 
+                          FontSize="20" 
+                          BorderBrush="{x:Null}"
+                          Command="{Binding LoginCommand}"
+                          CommandParameter="{Binding ElementName=PasswordboxLogin}"
+                          >
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="10"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                    <Button  
+                           x:Name="ButtonCencelLogin"
+                           Style="{StaticResource ShadowButtonStyle}"
+                           Content="Отмена"
+                           Height="50" 
+                           Background="#FFFFB289" 
+                           Margin="10,20,145,5" 
+                           Foreground="White" 
+                          FontFamily="Arial Black" 
+                           FontSize="20"
+                           BorderBrush="{x:Null}"
+                           Command="{Binding CancelCommand}"
+                           CommandParameter="{Binding ElementName=PasswordboxLogin}">
+
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="10"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+
+                </Grid>
+            </StackPanel>
+            <Image
+                Height="200"
+                Width="200"
+                Grid.Column="1"
+                Grid.ColumnSpan="2"
+                Margin="175,72,10,373"
+                Source="/images/test.png" 
+                Stretch="Fill"
+                Grid.RowSpan="2"/>
+            <Image 
+                Grid.Row="1"
+                Margin="64,59,265,430"
+                Source="/images/user.png" RenderTransformOrigin="0.758,0.28" Grid.ColumnSpan="2"
+                />
+            <Image 
+     Grid.Row="1"
+     Margin="257,451,54,32"
+     Source="/images/password-lock.png" RenderTransformOrigin="0.91,0.567" Grid.Column="1" Grid.ColumnSpan="2"
+     />
+        </Grid>
+    </Border>
+</UserControl>
+
+<UserControl x:Class="ScheduleAppDemo.MVVM.View.NewsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:ScheduleAppDemo.MVVM.View" 
+             xmlns:viewmodel="clr-namespace:ScheduleAppDemo.MVVM.ViewModel"
+           
+             mc:Ignorable="d" 
+             d:DesignHeight="705" d:DesignWidth="880">
+    <Grid Margin="20,20,20,20">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition 
+               Height="500"/>
+        </Grid.RowDefinitions>
+        <Border
+            Grid.Row="0" 
+            CornerRadius="12" 
+            Background="#FF4BB1FD"
+            Margin="10,44,10,10" 
+            RenderTransformOrigin="0.0,0.0" 
+            >
+            <Border.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform/>
+                    <SkewTransform AngleX="0.14"/>
+                    <RotateTransform/>
+                    <TranslateTransform X="0.123"/>
+                </TransformGroup>
+            </Border.RenderTransform>
+        </Border>
+        <Border
+            Grid.Column="1"
+            CornerRadius="12" 
+            Background="#FF854EFF"
+          Margin="10,44,10,10" 
+    />
+        <Border
+        Grid.Column="2"
+        CornerRadius="12" 
+        Margin="10,44,10,10" 
+         RenderTransformOrigin="0.0,0.0" 
+            Background="#FFEDFF4E">
+
+            <Border.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform/>
+                    <SkewTransform AngleX="-0.562"/>
+                    <RotateTransform/>
+                    <TranslateTransform/>
+                </TransformGroup>
+            </Border.RenderTransform>
+
+        </Border>
+        <TextBlock Text="Новости" 
+                   Height="30"
+                   Margin="10,10,0,0"
+                   HorizontalAlignment="Left"
+                   VerticalAlignment="Top" 
+                   FontFamily="Arial Black" 
+                   FontSize="20" 
+                   Foreground="White"
+                   />
+        <Border
+            Grid.Row="1" 
+            CornerRadius="5"
+            Margin="10,10,10,10"
+            >
+            <Border.Background>
+                <LinearGradientBrush EndPoint="1,1" StartPoint="1,0">
+                    <GradientStop Color="#FF4BB1FD"/>
+                    <GradientStop Color="#FFFFD573"
+                                  Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+        </Border>
+        <Border
+    Grid.Row="1" 
+            Grid.Column="1"
+    CornerRadius="5"
+    Margin="10,10,10,10"
+    >
+            <Border.Background>
+                <LinearGradientBrush EndPoint="1,1" StartPoint="1,0">
+                    <GradientStop Color="#FF854EFF"/>
+                    <GradientStop Color="#FFEDFF4E"
+                                  Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+        </Border>
+        <Border
+    Grid.Row="1" 
+            Grid.Column="2"
+    CornerRadius="5"
+    Margin="10,10,10,10"
+    >
+            <Border.Background>
+                <LinearGradientBrush EndPoint="0,1" StartPoint="0,0">
+                    <GradientStop Color="#FFEDFF4E"/>
+                    <GradientStop Color="#FF7AD25B" 
+                                  Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+        </Border>
+    </Grid>
+</UserControl>
+<UserControl x:Class="ScheduleAppDemo.MVVM.View.ScheduleEditorView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:ScheduleAppDemo.MVVM.View"
+             mc:Ignorable="d" 
+               d:DesignHeight="705" d:DesignWidth="880">
+
+
+
+    <Border  CornerRadius="20">
+        <Border.Background>
+            <LinearGradientBrush EndPoint="5,1" StartPoint="5,0">
+                <GradientStop Color="#FF6500FF"/>
+                <GradientStop Color="#FFFFC45B" Offset="1"/>
+            </LinearGradientBrush>
+        </Border.Background>
+
+        <Grid Margin="15">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Шапка с выбором группы -->
+            <Border CornerRadius="15" Background="White" Grid.RowSpan="3" Height="681" VerticalAlignment="Top" Opacity="0.2" Margin="-7,-7,-7,-7"/>
+
+            <!-- Шапка с выбором группы -->
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
+                <TextBlock Text="✏️ Редактор расписания" 
+                      FontSize="22" FontWeight="Bold" 
+                      Foreground="White" VerticalAlignment="Center"/>
+
+                <ComboBox ItemsSource="{Binding Groups}" 
+                     DisplayMemberPath="GroupName"
+                   
+                     SelectedItem="{Binding SelectedGroup}"
+                     Width="200" Height="30" FontSize="12"
+                     Margin="20,0,0,0" 
+                      BorderBrush="Black" 
+                      Foreground="Black" Background="White"
+                      />
+
+            </StackPanel>
+            <Border  CornerRadius="20" Height="637" VerticalAlignment="Top" Background="White" Margin="7,38,0,0" Grid.RowSpan="3" BorderBrush="#FF1A1A1A">
+                <DataGrid 
+              
+                 ItemsSource="{Binding ScheduleTable}"
+                 AutoGenerateColumns="False"
+                 CanUserAddRows="False"
+                 IsReadOnly="True"
+                 HeadersVisibility="Column"
+                 SelectionUnit="Cell"
+                 SelectionMode="Single"
+                      BorderBrush="White" Background="#FF1A1A1A" Margin="23,24,23,10" Foreground="Black" Grid.RowSpan="2" Grid.Row="1"
+                 >
+
+                    <DataGrid.Columns>
+                        <!-- Колонка времени -->
+                        <DataGridTextColumn 
+                    Header="Время" 
+                                   Binding="{Binding TimeDisplay}"
+                                   Width="80" IsReadOnly="True"/>
+
+                        <!-- Понедельник -->
+                        <DataGridTemplateColumn Header="Пн" Width="120">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding Monday.Color}" 
+                                   CornerRadius="3" Padding="5" Margin="1"
+                                   MouseLeftButtonDown="Cell_MouseLeftButtonDown"
+                                   Tag="1">
+                                        <TextBlock Text="{Binding Monday.DisplaySubject}" 
+                                          FontSize="10" TextWrapping="Wrap"
+                                          TextAlignment="Center"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Вторник -->
+                        <DataGridTemplateColumn Header="Вт" Width="120">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding Tuesday.Color}" 
+                                   CornerRadius="3" Padding="5" Margin="1"
+                                   MouseLeftButtonDown="Cell_MouseLeftButtonDown"
+                                   Tag="2">
+                                        <TextBlock Text="{Binding Tuesday.DisplaySubject}" 
+                                          FontSize="10" TextWrapping="Wrap"
+                                          TextAlignment="Center"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTemplateColumn Header="Ср" Width="120">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding Wednesday.Color}" 
+                                   CornerRadius="3" Padding="5" Margin="1"
+                                   MouseLeftButtonDown="Cell_MouseLeftButtonDown"
+                                   Tag="3">
+                                        <TextBlock Text="{Binding Wednesday.DisplaySubject}" 
+                                          FontSize="10" TextWrapping="Wrap"
+                                          TextAlignment="Center"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Четверг -->
+                        <DataGridTemplateColumn Header="Чт" Width="120">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding Thursday.Color}" 
+                                   CornerRadius="3" Padding="5" Margin="1"
+                                   MouseLeftButtonDown="Cell_MouseLeftButtonDown"
+                                   Tag="4">
+                                        <TextBlock Text="{Binding Thursday.DisplaySubject}" 
+                                          FontSize="10" TextWrapping="Wrap"
+                                          TextAlignment="Center"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Пятница -->
+                        <DataGridTemplateColumn Header="Пт" Width="120">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding Friday.Color}" 
+                                   CornerRadius="3" Padding="5" Margin="1"
+                                   MouseLeftButtonDown="Cell_MouseLeftButtonDown"
+                                   Tag="5">
+                                        <TextBlock Text="{Binding Friday.DisplaySubject}" 
+                                          FontSize="10" TextWrapping="Wrap"
+                                          TextAlignment="Center"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Суббота -->
+                        <DataGridTemplateColumn Header="Сб" Width="120">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding Saturday.Color}" 
+                                   CornerRadius="3" Padding="5" Margin="1"
+                                   MouseLeftButtonDown="Cell_MouseLeftButtonDown"
+                                   Tag="6">
+                                        <TextBlock Text="{Binding Saturday.DisplaySubject}" 
+                                          FontSize="10" TextWrapping="Wrap"
+                                          TextAlignment="Center"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+            <!-- Таблица расписания 6×6 -->
+
+            <!-- Кнопки управления -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15,0,0">
+                <Button Content="🗑️ Очистить всё" 
+                    Command="{Binding ClearScheduleCommand}"
+                    Width="131" Height="35" 
+                    Background="#FF6500FF" 
+                    Foreground="White"
+                    FontSize="12"
+                  Style="{StaticResource GlowingRoundedButton}"
+                    Margin="0,0,10,10"/>
+                <Button Content="💾 Сохранить расписание" 
+                    Command="{Binding SaveScheduleCommand}"
+                    Width="174" Height="35" 
+                    Background="#FF6500FF" 
+                    Foreground="White"
+                    FontSize="12" 
+                      FontWeight="SemiBold"
+                     Style="{StaticResource  GlowingRoundedButton}"
+                        Margin="0,0,0,10"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>
+
+<UserControl x:Class="ScheduleAppDemo.MVVM.View.GroupsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:ScheduleAppDemo.MVVM.View"
+              xmlns:converters="clr-namespace:ScheduleAppDemo.MVVM.Converters"
+             mc:Ignorable="d" 
+            d:DesignHeight="705" d:DesignWidth="880">
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- ЗАГОЛОВОК И СТАТИСТИКА -->
+        <Border Grid.Row="0" Background="#FF1A1A1A" 
+                CornerRadius="10" Padding="12" Margin="0,0,0,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="👥 Управление группами" 
+                              FontSize="20" FontWeight="Bold" 
+                              Foreground="White"/>
+                    <TextBlock Text="Создание и редактирование учебных групп"
+                              FontSize="11" Foreground="#666" Margin="0,3,0,0"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Background="#FFE8F5E8" CornerRadius="6" Padding="8,4" Margin="3,0">
+                        <TextBlock Text="{Binding TotalGroups}" FontSize="14" FontWeight="Bold" 
+                                  Foreground="#FF4CAF50" HorizontalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Text="групп" VerticalAlignment="Center" Margin="3,0,10,0" Foreground="#666" FontSize="11"/>
+
+                    <Border Background="#FFE3F2FD" CornerRadius="6" Padding="8,4" Margin="3,0">
+                        <TextBlock Text="{Binding ActiveGroups}" FontSize="14" FontWeight="Bold" 
+                                  Foreground="#FF2196F3" HorizontalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Text="активных" VerticalAlignment="Center" Margin="3,0,0,0" Foreground="#666" FontSize="11"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ПАНЕЛЬ УПРАВЛЕНИЯ -->
+        <Border Grid.Row="1" CornerRadius="8" Padding="12" Margin="0,0,0,10">
+            <Border.Background>
+                <LinearGradientBrush EndPoint="0,1" StartPoint="0,0">
+                    <GradientStop Color="#FF6500FF"/>
+                    <GradientStop Color="#FFFDBF7F" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+            <StackPanel Orientation="Vertical">
+                <!-- ВЕРХНЯЯ СТРОКА - КНОПКИ -->
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <Button Style="{ StaticResource GlowingRoundedButton}"
+                        Content="➕ Новая группа" 
+                           Command="{Binding AddGroupCommand}"
+                           Width="130" Height="32" 
+                           Background="#FF1A1A1A" Foreground="White"
+                           FontSize="11" FontWeight="SemiBold"
+                           BorderThickness="0" />
+
+                    <Button  Style="{ StaticResource GlowingRoundedButton}"
+                        Content="🔄 Обновить" 
+                           Command="{Binding RefreshCommand}"
+                           Width="100" Height="32" Margin="10,0,0,0"
+                           Background="#FF7D00FF" Foreground="White"
+                           FontSize="11" FontWeight="SemiBold"
+                           BorderThickness="0" />
+                </StackPanel>
+
+                <!-- НИЖНЯЯ СТРОКА - ФИЛЬТРЫ -->
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Фильтры:" FontWeight="SemiBold" 
+                              VerticalAlignment="Center" Margin="0,0,8,0" Foreground="White" FontSize="11"/>
+
+                    <ComboBox ItemsSource="{Binding StudyYears}" 
+                             DisplayMemberPath="YearName"
+                             SelectedValuePath="YearId"
+                             SelectedValue="{Binding SelectedYearId}"
+                             Width="110" Height="28"
+                             FontSize="11"
+                             Background="White" BorderBrush="#DDD"/>
+
+                    <ComboBox ItemsSource="{Binding Specialties}" 
+                             DisplayMemberPath="SpecialtyName"
+                             SelectedValuePath="SpecialtyId"
+                             SelectedValue="{Binding SelectedSpecialtyId}"
+                             Width="180" Height="28" Margin="8,0,0,0"
+                             FontSize="11"
+                             Background="White" BorderBrush="#DDD"/>
+
+                    <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                            Width="200" Height="28" Margin="15,0,0,0"
+                            FontSize="11" Padding="8,0"
+                            Background="White" BorderBrush="#DDD" BorderThickness="1"
+                           />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="2" CornerRadius="15" Background="#FF1A1A1A" BorderThickness="1" BorderBrush="#333" Margin="0,0,0,0">
+            <Grid>
+                <Border CornerRadius="15" Background="#FF1A1A1A" Margin="1"/>
+                <DataGrid x:Name="GroupsDataGrid"
+                 ItemsSource="{Binding FilteredGroups}"
+                 AutoGenerateColumns="False"
+                 CanUserAddRows="False"
+                 IsReadOnly="True"
+                 HeadersVisibility="Column"
+                 SelectionMode="Single"
+                 RowHeight="40"
+                 BorderThickness="0"
+                 Background="Transparent"
+                 Foreground="White"
+                 VerticalScrollBarVisibility="Auto"
+                 Margin="10,10,10,10">
+
+                    <!-- СТИЛЬ ДЛЯ ТЕМНОЙ ТЕМЫ -->
+                    <DataGrid.Resources>
+                        <!-- Стиль для заголовков колонок -->
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="Background" Value="#FF2D2D2D"/>
+                            <Setter Property="Foreground" Value="White"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="Height" Value="35"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="FontSize" Value="11"/>
+                            <Setter Property="BorderBrush" Value="#444"/>
+                            <Setter Property="Padding" Value="8,0"/>
+                        </Style>
+
+                        <!-- Стиль для строк -->
+                        <Style TargetType="DataGridRow">
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="BorderBrush" Value="Transparent"/>
+                            <Setter Property="Foreground" Value="White"/>
+                        </Style>
+
+                        <!-- Стиль для ячеек -->
+                        <Style TargetType="DataGridCell">
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="BorderBrush" Value="#444"/>
+                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                            <Setter Property="Padding" Value="8,0"/>
+                            <Setter Property="Foreground" Value="White"/>
+                        </Style>
+
+                        <!-- Стиль при наведении на строку -->
+                       
+                    </DataGrid.Resources>
+
+                    <DataGrid.Columns>
+
+                        <!-- НАЗВАНИЕ ГРУППЫ -->
+                        <DataGridTemplateColumn Header="Группа" Width="100">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="🎓" FontSize="12" Margin="0,0,5,0"/>
+                                        <TextBlock Text="{Binding GroupName}" 
+                                          FontWeight="SemiBold" FontSize="11"
+                                          VerticalAlignment="Center" Foreground="White"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- СПЕЦИАЛЬНОСТЬ -->
+                        <DataGridTemplateColumn Header="Специальность" Width="190">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <!-- Временный цветной кружок - замените на конвертер когда заработает -->
+                                        <Border Width="10" Height="10" CornerRadius="5" 
+                                      
+                                        Margin="0,0,6,0"/>
+                                        <TextBlock Text="{Binding Specialty.SpecialtyName}" 
+                                          FontSize="11" TextWrapping="Wrap"
+                                          VerticalAlignment="Center" Foreground="White"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- КУРС -->
+                        <DataGridTextColumn Header="Курс" 
+                                   Binding="{Binding CurrentYear}" 
+                                   Width="80"
+                                   Foreground="White"/>
+
+                        <!-- ГОД ПОСТУПЛЕНИЯ -->
+                        <DataGridTextColumn Header="Год пост." 
+                                   Binding="{Binding EnrollmentYear}" 
+                                   Width="90"
+                                   Foreground="White"/>
+
+                        <!-- СТУДЕНТОВ -->
+                        <DataGridTemplateColumn Header="👥" Width="90">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="#FF6A5ACD" 
+                                   CornerRadius="10" Padding="6,3" HorizontalAlignment="Center">
+                                        <TextBlock Text="{Binding StudentCount}" 
+                                          FontWeight="SemiBold" FontSize="10"
+                                          Foreground="White" HorizontalAlignment="Center"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- СТАТУС -->
+                        <DataGridTemplateColumn Header="Статус" Width="80">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border 
+                                   CornerRadius="4" Padding="6,3" HorizontalAlignment="Center">
+                                        <TextBlock 
+                                          FontSize="10" FontWeight="SemiBold"
+                                          Foreground="White"
+                                          HorizontalAlignment="Center"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- ДЕЙСТВИЯ -->
+                        <DataGridTemplateColumn Header="Действия" Width="150">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+
+                                        <!-- КНОПКА ПРОСМОТРА -->
+                                        <Button Content="👁️" 
+                                       ToolTip="Просмотр группы"
+                                       Command="{Binding DataContext.ViewGroupCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                       CommandParameter="{Binding}"
+                                       Width="28" Height="28" Margin="2"
+                                       Background="#FF2196F3" Foreground="White"
+                                       BorderThickness="0" 
+                                       FontSize="10"/>
+
+                                        <!-- КНОПКА РЕДАКТИРОВАНИЯ -->
+                                        <Button Content="✏️" 
+                                       ToolTip="Редактировать"
+                                       Command="{Binding DataContext.EditGroupCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                       CommandParameter="{Binding}"
+                                       Width="28" Height="28" Margin="2"
+                                       Background="#FF00D6FF" Foreground="White"
+                                       BorderThickness="0" 
+                                       FontSize="10"/>
+
+                                        <!-- КНОПКА УДАЛЕНИЯ -->
+                                        <Button Content="🗑️" 
+                                       ToolTip="Удалить группу"
+                                       Command="{Binding DataContext.DeleteGroupCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                       CommandParameter="{Binding}"
+                                       Width="28" Height="28" Margin="2"
+                                       Background="#FFf44336" Foreground="White"
+                                       BorderThickness="0" 
+                                       FontSize="10"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Border>
+        <!-- ПАНЕЛЬ СТАТУСА -->
+        <Border Grid.Row="3" Background="#FFF0F0F0" CornerRadius="6" Padding="8" Margin="0,8,0,0">
+            <TextBlock Text="{Binding StatusMessage}" 
+                      FontSize="10" Foreground="#666" 
+                      HorizontalAlignment="Center"/>
+        </Border>
+
+    </Grid>
+</UserControl>
+
 
 <UserControl x:Class="ScheduleAppDemo.MVVM.View.EditLessonDialog"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -648,7 +1625,7 @@ namespace ScheduleAppDemo .MVVM .Model
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
             <TextBlock Text="✏️ Редактирование занятия" 
                       FontSize="20" FontWeight="Bold" 
-                      Foreground="#FF8C43FF" VerticalAlignment="Center"/>
+                      Foreground="Black" VerticalAlignment="Center"/>
         </StackPanel>
 
         <!-- Форма редактирования -->
@@ -657,7 +1634,7 @@ namespace ScheduleAppDemo .MVVM .Model
 
                 <!-- Информация о времени -->
                 <GroupBox Header="📅 Время и день" Style="{StaticResource DialogGroupBox}">
-                    <TextBlock Text="{Binding TimeInfo}" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding TimeInfo}" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap" Foreground="White"/>
                 </GroupBox>
 
                 <!-- Предмет -->
@@ -666,7 +1643,9 @@ namespace ScheduleAppDemo .MVVM .Model
                              DisplayMemberPath="SubjectName"
                              SelectedValue="{Binding SelectedSubjectId}"
                              SelectedValuePath="SubjectId"
-                             Height="35" FontSize="12"/>
+                             Height="35"
+                             FontSize="12"
+                              />
                 </GroupBox>
 
                 <!-- Преподаватель -->
@@ -722,539 +1701,32 @@ namespace ScheduleAppDemo .MVVM .Model
 
         <!-- Кнопки -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15,0,0">
-            <Button Content="❌ Отмена" 
+            <Button 
+                Content="❌ Отмена" 
                     Click="CancelButton_Click"
                     Width="120" Height="35" 
-                    Background="#FF9E9E9E" 
+                    Background="#FFFF4600" 
+                    Style="{ StaticResource GlowingRoundedButton}" 
                     Foreground="White"
                     FontSize="12"
-                    Margin="0,0,10,0"/>
+                    Margin="0,0,10,0"
+                    />
             <Button Content="✅ Сохранить" 
                     Click="SaveButton_Click"
                     Width="120" Height="35" 
-                    Background="#FF4CAF50" 
+                    Background="#FF60FF66" 
                     Foreground="White"
-                    FontSize="12" FontWeight="SemiBold"/>
+                    Style="{ StaticResource GlowingRoundedButton}" 
+                    FontSize="12" 
+                    FontWeight="SemiBold"/>
         </StackPanel>
     </Grid>
 </UserControl>
 
-namespace ScheduleAppDemo .MVVM .View
-{
-    /// <summary>
-    /// Логика взаимодействия для EditLessonDialog.xaml
-    /// </summary>
-    public partial class EditLessonDialog : UserControl
-    {
-        public EditLessonViewModel ViewModel => (EditLessonViewModel)DataContext;
-
-        // События для управления диалогом
-        public event RoutedEventHandler SaveClicked;
-        public event RoutedEventHandler CancelClicked;
-
-        public EditLessonDialog ( )
-        {
-            InitializeComponent();
-        }
-
-        private void SaveButton_Click (object sender , RoutedEventArgs e)
-        {
-            if ( ViewModel .SaveChanges() )
-            {
-                SaveClicked?.Invoke(this , new RoutedEventArgs());
-            }
-        }
-
-        private void CancelButton_Click (object sender , RoutedEventArgs e)
-        {
-            CancelClicked?.Invoke(this , new RoutedEventArgs());
-        }
-    }
-}
-
-<UserControl x:Class="ScheduleAppDemo.MVVM.View.ScheduleEditorView"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:ScheduleAppDemo.MVVM.View"
-             mc:Ignorable="d" 
-                        d:DesignHeight="705" d:DesignWidth="880">
-
-    <Grid Margin="15">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-
-        <!-- Шапка с выбором группы -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
-            <TextBlock Text="✏️ Редактор расписания" 
-                      FontSize="22" FontWeight="Bold" 
-                      Foreground="#FF8C43FF" VerticalAlignment="Center"/>
-
-            <ComboBox ItemsSource="{Binding Groups}" 
-                     DisplayMemberPath="GroupName"
-                     SelectedItem="{Binding SelectedGroup}"
-                     Width="200" Height="30" FontSize="12"
-                     Margin="20,0,0,0"/>
-        </StackPanel>
-
-        <!-- Таблица расписания 6×6 -->
-        <DataGrid Grid.Row="1" 
-                 ItemsSource="{Binding ScheduleTable}"
-                 AutoGenerateColumns="False"
-                 CanUserAddRows="False"
-                 IsReadOnly="True"
-                 HeadersVisibility="Column"
-                 RowHeight="65"
-                 SelectionUnit="Cell"
-                 SelectionMode="Single">
-
-            <DataGrid.Columns>
-                <!-- Колонка времени -->
-                <DataGridTextColumn Header="Время" 
-                                   Binding="{Binding TimeDisplay}"
-                                   Width="80" IsReadOnly="True"/>
-
-                <!-- Понедельник -->
-                <DataGridTemplateColumn Header="Пн" Width="120">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Border Background="{Binding Monday.Color}" 
-                                   CornerRadius="3" Padding="5" Margin="1"
-                                   MouseLeftButtonDown="Cell_MouseLeftButtonDown"
-                                   Tag="1">
-                                <TextBlock Text="{Binding Monday.DisplaySubject}" 
-                                          FontSize="10" TextWrapping="Wrap"
-                                          TextAlignment="Center"/>
-                            </Border>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-
-                <!-- Вторник -->
-                <DataGridTemplateColumn Header="Вт" Width="120">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Border Background="{Binding Tuesday.Color}" 
-                                   CornerRadius="3" Padding="5" Margin="1"
-                                   MouseLeftButtonDown="Cell_MouseLeftButtonDown"
-                                   Tag="2">
-                                <TextBlock Text="{Binding Tuesday.DisplaySubject}" 
-                                          FontSize="10" TextWrapping="Wrap"
-                                          TextAlignment="Center"/>
-                            </Border>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-
-           
-                <DataGridTemplateColumn Header="Ср" Width="120">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Border Background="{Binding Wednesday.Color}" 
-                                   CornerRadius="3" Padding="5" Margin="1"
-                                   MouseLeftButtonDown="Cell_MouseLeftButtonDown"
-                                   Tag="3">
-                                <TextBlock Text="{Binding Wednesday.DisplaySubject}" 
-                                          FontSize="10" TextWrapping="Wrap"
-                                          TextAlignment="Center"/>
-                            </Border>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-
-                <!-- Четверг -->
-                <DataGridTemplateColumn Header="Чт" Width="120">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Border Background="{Binding Thursday.Color}" 
-                                   CornerRadius="3" Padding="5" Margin="1"
-                                   MouseLeftButtonDown="Cell_MouseLeftButtonDown"
-                                   Tag="4">
-                                <TextBlock Text="{Binding Thursday.DisplaySubject}" 
-                                          FontSize="10" TextWrapping="Wrap"
-                                          TextAlignment="Center"/>
-                            </Border>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-
-                <!-- Пятница -->
-                <DataGridTemplateColumn Header="Пт" Width="120">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Border Background="{Binding Friday.Color}" 
-                                   CornerRadius="3" Padding="5" Margin="1"
-                                   MouseLeftButtonDown="Cell_MouseLeftButtonDown"
-                                   Tag="5">
-                                <TextBlock Text="{Binding Friday.DisplaySubject}" 
-                                          FontSize="10" TextWrapping="Wrap"
-                                          TextAlignment="Center"/>
-                            </Border>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-
-                <!-- Суббота -->
-                <DataGridTemplateColumn Header="Сб" Width="120">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Border Background="{Binding Saturday.Color}" 
-                                   CornerRadius="3" Padding="5" Margin="1"
-                                   MouseLeftButtonDown="Cell_MouseLeftButtonDown"
-                                   Tag="6">
-                                <TextBlock Text="{Binding Saturday.DisplaySubject}" 
-                                          FontSize="10" TextWrapping="Wrap"
-                                          TextAlignment="Center"/>
-                            </Border>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-            </DataGrid.Columns>
-        </DataGrid>
-
-        <!-- Кнопки управления -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15,0,0">
-            <Button Content="💾 Сохранить расписание" 
-                    Command="{Binding SaveScheduleCommand}"
-                    Width="160" Height="35" 
-                    Background="#FF2196F3" 
-                    Foreground="White"
-                    FontSize="12" FontWeight="SemiBold"
-                    Margin="0,0,10,0"/>
-
-            <Button Content="🗑️ Очистить всё" 
-                    Command="{Binding ClearScheduleCommand}"
-                    Width="120" Height="35" 
-                    Background="#FF9E9E9E" 
-                    Foreground="White"
-                    FontSize="12"
-                    Margin="0,0,10,0"/>
-        </StackPanel>
-    </Grid>
-</UserControl>
-
-using ScheduleAppDemo .MVVM .ViewModel;
-using System;
-using System .Collections .Generic;
-using System .Linq;
-using System .Text;
-using System .Threading .Tasks;
-using System .Windows;
-using System .Windows .Controls;
-using System .Windows .Data;
-using System .Windows .Documents;
-using System .Windows .Input;
-using System .Windows .Media;
-using System .Windows .Media .Imaging;
-using System .Windows .Navigation;
-using System .Windows .Shapes;
-
-namespace ScheduleAppDemo .MVVM .View
-{
-    /// <summary>
-    /// Логика взаимодействия для ScheduleEditorView.xaml
-    /// </summary>
-    public partial class ScheduleEditorView : UserControl
-    {
-        public ScheduleEditorView ( )
-        {
-            InitializeComponent();
-        }
-
-        private void Cell_MouseLeftButtonDown (object sender , MouseButtonEventArgs e)
-        {
-            if ( sender is Border border && border .DataContext is Model .ScheduleRow row )
-            {
-                int dayOfWeek = int .Parse(border .Tag .ToString());
-                int timeSlotId = row .TimeSlotId;
-
-                var cell = GetCellByDay(row , dayOfWeek);
-
-                var viewModel = (ScheduleEditorViewModel)DataContext;
-                viewModel .UpdateSelectedCell(cell , dayOfWeek , timeSlotId);
-            }
-        }
-
-        private Model .LessonCell GetCellByDay (Model .ScheduleRow row , int dayOfWeek)
-        {
-            switch ( dayOfWeek )
-            {
-                case 1: return row .Monday;
-                case 2: return row .Tuesday;
-                case 3: return row .Wednesday;
-                case 4: return row .Thursday;
-                case 5: return row .Friday;
-                case 6: return row .Saturday;
-                default: return null;
-            }
-        }
-    }
-}
-<UserControl x:Class="ScheduleAppDemo.MVVM.View.MainScheduleView"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:ScheduleAppDemo.MVVM.View"
-             mc:Ignorable="d" 
-             d:DesignHeight="705" d:DesignWidth="880">
-    <Grid>
-        <Border CornerRadius="20" 
-              Margin="5,5,5,5">
-            <Border.Background>
-                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-                    <GradientStop Color="#FFFFB253"/>
-                    <GradientStop Color="#FF5A00E1" Offset="0.355"/>
-                </LinearGradientBrush>
-            </Border.Background>
-            <Border Margin="10" CornerRadius="15" Background="White" Opacity="0.2">
-            </Border>
-        </Border>
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition/>
-                <RowDefinition Height="600"/>
-            </Grid.RowDefinitions>
-
-            <ComboBox 
-                x:Name="cmbCourse"
-                Margin="41,62,695,27"
-                Style="{ StaticResource RoundedComboBoxTheme}"
-                Background="#FFFFC096"
-                BorderBrush="White"/>
 
 
-            <ComboBox 
-                x:Name="cmbSpecialty"
-                Margin="220,62,440,27"
-                Style="{StaticResource RoundedComboBoxTheme}"
-                Background="#FFFFC096"
-                BorderBrush="White" Foreground="{x:Null}"/>
-            <ComboBox 
-                x:Name="cmbGroup"
-                Margin="482,62,238,27"
-                Style="{StaticResource RoundedComboBoxTheme}"
-                Background="#FFFFC096"
-                BorderBrush="White"/>
-            <Button
-                x:Name="btnLoad"
-                Content="Загрузить"
-                Width="200" Margin="660,20,20,27" Foreground="White" BorderBrush="White" Background="#FF1E1E1E" FontSize="20">
-                <Button.Resources>
-                    <Style TargetType="Border">
-                        <Setter Property="CornerRadius" Value="13"/>
-                    </Style>
-                </Button.Resources>
-            </Button>
-            <TextBlock Text="Курсы"
-                       FontSize="20" 
-                       Margin="41,31,0,43" 
-                       Foreground="White"
-                       HorizontalAlignment="Left" 
-                       FontWeight="Bold" 
-                       Width="144"
-                       />
-            <TextBlock Text="Специальность"
-            FontSize="20" 
-            Margin="220,30,0,44"
-                       Foreground="White"
-                       HorizontalAlignment="Left" 
-                       FontWeight="Bold"
-            />
-            <TextBlock Text="Группа"
-            FontSize="20" 
-            Margin="482,30,0,44" 
-            Foreground="White" 
-            HorizontalAlignment="Left"
-            FontWeight="Bold"
-            />
-            <Border Grid.Row="1" 
-        BorderThickness="2" 
-        CornerRadius="10" 
-        Background="White"
-        Margin="15,0,15,15"
-        Padding="1" 
-        BorderBrush="#FF1E1E1E">
-                <DataGrid x:Name="dataGrid"         
-              Style="{StaticResource SimpleRoundedDataGrid}"
-              AutoGenerateColumns="False"
-              CanUserAddRows="False" 
-              Margin="7,7,7,7" Background="White" BorderBrush="Black" Foreground="Black"
-             >
-                    <DataGrid.Columns>
+папка ViewModel (7 классов ) : 
 
-                        <DataGridTextColumn Header="Время" 
-                               Width="100" 
-                               Binding="{Binding TimeDisplay}"
-                               IsReadOnly="True"
-                               HeaderStyle="{StaticResource DataGridHeaderStyle}"/>
-                        <DataGridTemplateColumn Header="Понедельник" Width="150"
-                                   HeaderStyle="{StaticResource DataGridHeaderStyle}">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Border Background="{Binding Monday.Color}" 
-                               CornerRadius="5" 
-                               Padding="8,5" 
-                               Margin="2"
-                               ToolTip="{Binding Monday.ToolTip}">
-                                        <StackPanel>
-                                            <TextBlock Text="{Binding Monday.SubjectName}" 
-                                          FontWeight="SemiBold" 
-                                          FontSize="12"
-                                          TextWrapping="Wrap"/>
-                                            <TextBlock Text="{Binding Monday.TeacherName}" 
-                                          FontSize="10"
-                                          Foreground="#666"/>
-                                            <TextBlock Text="{Binding Monday.Classroom}" 
-                                          FontSize="10"
-                                          Foreground="#666"/>
-                                        </StackPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                        <DataGridTemplateColumn Header="Вторник" Width="150"
-                                   HeaderStyle="{StaticResource DataGridHeaderStyle}">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Border Background="{Binding Tuesday.Color}" 
-                               CornerRadius="5" 
-                               Padding="8,5" 
-                               Margin="2"
-                               ToolTip="{Binding Tuesday.ToolTip}">
-                                        <StackPanel>
-                                            <TextBlock Text="{Binding Tuesday.SubjectName}" 
-                                          FontWeight="SemiBold" 
-                                          FontSize="12"
-                                          TextWrapping="Wrap"/>
-                                            <TextBlock Text="{Binding Tuesday.TeacherName}" 
-                                          FontSize="10"
-                                          Foreground="#666"/>
-                                            <TextBlock Text="{Binding Tuesday.Classroom}" 
-                                          FontSize="10"
-                                          Foreground="#666"/>
-                                        </StackPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                        <DataGridTemplateColumn Header="Среда" Width="150"
-                                   HeaderStyle="{StaticResource DataGridHeaderStyle}">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Border Background="{Binding Wednesday.Color}" 
-                               CornerRadius="5" 
-                               Padding="8,5" 
-                               Margin="2"
-                               ToolTip="{Binding Wednesday.ToolTip}">
-                                        <StackPanel>
-                                            <TextBlock Text="{Binding Wednesday.SubjectName}" 
-                                          FontWeight="SemiBold" 
-                                          FontSize="12"
-                                          TextWrapping="Wrap"/>
-                                            <TextBlock Text="{Binding Wednesday.TeacherName}" 
-                                          FontSize="10"
-                                          Foreground="#666"/>
-                                            <TextBlock Text="{Binding Wednesday.Classroom}" 
-                                          FontSize="10"
-                                          Foreground="#666"/>
-                                        </StackPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                        <DataGridTemplateColumn Header="Четверг" Width="150"
-                                   HeaderStyle="{StaticResource DataGridHeaderStyle}">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Border Background="{Binding Thursday.Color}" 
-                               CornerRadius="5" 
-                               Padding="8,5" 
-                               Margin="2"
-                               ToolTip="{Binding Thursday.ToolTip}">
-                                        <StackPanel>
-                                            <TextBlock Text="{Binding Thursday.SubjectName}" 
-                                          FontWeight="SemiBold" 
-                                          FontSize="12"
-                                          TextWrapping="Wrap"/>
-                                            <TextBlock Text="{Binding Thursday.TeacherName}" 
-                                          FontSize="10"
-                                          Foreground="#666"/>
-                                            <TextBlock Text="{Binding Thursday.Classroom}" 
-                                          FontSize="10"
-                                          Foreground="#666"/>
-                                        </StackPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-
-                        <DataGridTemplateColumn Header="Пятница" Width="150"
-                                   HeaderStyle="{StaticResource DataGridHeaderStyle}">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Border Background="{Binding Friday.Color}" 
-                               CornerRadius="5" 
-                               Padding="8,5" 
-                               Margin="2"
-                               ToolTip="{Binding Friday.ToolTip}">
-                                        <StackPanel>
-                                            <TextBlock Text="{Binding Friday.SubjectName}" 
-                                          FontWeight="SemiBold" 
-                                          FontSize="12"
-                                          TextWrapping="Wrap"/>
-                                            <TextBlock Text="{Binding Friday.TeacherName}" 
-                                          FontSize="10"
-                                          Foreground="#666"/>
-                                            <TextBlock Text="{Binding Friday.Classroom}" 
-                                          FontSize="10"
-                                          Foreground="#666"/>
-                                        </StackPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-
-                        <!-- Суббота -->
-                        <DataGridTemplateColumn Header="Суббота" Width="150"
-                                   HeaderStyle="{StaticResource DataGridHeaderStyle}">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Border Background="{Binding Saturday.Color}" 
-                               CornerRadius="5" 
-                               Padding="8,5" 
-                               Margin="2"
-                               ToolTip="{Binding Saturday.ToolTip}">
-                                        <StackPanel>
-                                            <TextBlock Text="{Binding Saturday.SubjectName}" 
-                                          FontWeight="SemiBold" 
-                                          FontSize="12"
-                                          TextWrapping="Wrap"/>
-                                            <TextBlock Text="{Binding Saturday.TeacherName}" 
-                                          FontSize="10"
-                                          Foreground="#666"/>
-                                            <TextBlock Text="{Binding Saturday.Classroom}" 
-                                          FontSize="10"
-                                          Foreground="#666"/>
-                                        </StackPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                    </DataGrid.Columns>
-                </DataGrid>
-            </Border>
-        </Grid>
-    </Grid>
-</UserControl>
-
-
-
-ПАПКА ViewModel 
 using ScheduleAppDemo .Core;
 using ScheduleAppDemo .MVVM .Model;
 using ScheduleAppDemo .MVVM .Model .Entities;
@@ -1452,6 +1924,7 @@ namespace ScheduleAppDemo .MVVM .ViewModel
         }
     }
 }
+
 using ScheduleAppDemo .Core;
 using ScheduleAppDemo .MVVM .Model;
 using ScheduleAppDemo .MVVM .Model .Entities;
@@ -1462,8 +1935,470 @@ using System .Linq;
 using System .Text;
 using System .Threading .Tasks;
 using System .Windows;
-using System .Windows .Input;
 
+namespace ScheduleAppDemo .MVVM .ViewModel
+{
+    public class GroupsViewModel : ObservableObject
+    {
+        private ObservableCollection<AcademicWeek> _academicWeeks;
+        private AcademicWeek _selectedWeek;
+        private DateTime _selectedDate = DateTime .Today;
+        private ObservableCollection<Group> _groups;
+        private ObservableCollection<Group> _filteredGroups;
+        private ObservableCollection<StudyYear> _studyYears;
+        private ObservableCollection<Specialty> _specialties;
+
+        private string _searchText;
+        private int? _selectedYearId;
+        private int? _selectedSpecialtyId;
+        private string _statusMessage;
+        private int _totalGroups;
+        private int _activeGroups;
+
+        public GroupsViewModel ( )
+        {
+            Groups = new ObservableCollection<Group>();
+            FilteredGroups = new ObservableCollection<Group>();
+            StudyYears = new ObservableCollection<StudyYear>();
+            Specialties = new ObservableCollection<Specialty>();
+
+            LoadData();
+            InitializeCommands();
+        }
+
+        public ObservableCollection<AcademicWeek> AcademicWeeks
+        {
+            get => _academicWeeks;
+            set => SetProperty(ref _academicWeeks , value);
+        }
+
+        public AcademicWeek SelectedWeek
+        {
+            get => _selectedWeek;
+            set
+            {
+                SetProperty(ref _selectedWeek , value);
+                if ( value != null )
+                    LoadScheduleForWeek(value .WeekStart);
+            }
+        }
+
+        public DateTime SelectedDate
+        {
+            get => _selectedDate;
+            set
+            {
+                SetProperty(ref _selectedDate , value);
+                LoadScheduleForDate(value);
+            }
+        }
+
+        // Методы для загрузки расписания
+        private void LoadScheduleForWeek (DateTime weekStart)
+        {
+            // Загрузка расписания на выбранную неделю
+            StatusMessage = $"Загружено расписание на неделю с {weekStart:dd.MM.yyyy}";
+        }
+
+        private void LoadScheduleForDate (DateTime date)
+        {
+            // Загрузка расписания на конкретную дату
+            StatusMessage = $"Загружено расписание на {date:dd.MM.yyyy}";
+        }
+
+        private void InitializeAcademicWeeks ( )
+        {
+            // Генерируем 10 учебных недель от текущей даты
+            var startDate = DateTime .Today .AddDays(-(int)DateTime .Today .DayOfWeek + 1); // Начало текущей недели
+            AcademicWeeks = new ObservableCollection<AcademicWeek>();
+
+            for ( int i = 0 ; i < 10 ; i++ )
+            {
+                var weekStart = startDate .AddDays(i * 7);
+                var weekEnd = weekStart .AddDays(6);
+                var week = new AcademicWeek
+                {
+                    WeekStart = weekStart ,
+                    WeekEnd = weekEnd ,
+                    WeekNumber = DatabaseHelper .GetCurrentWeekNumber(weekStart)
+                };
+                AcademicWeeks .Add(week);
+
+                if ( week .IsCurrentWeek )
+                    SelectedWeek = week;
+            }
+        }
+        // Свойства
+        public ObservableCollection<Group> Groups
+        {
+            get => _groups;
+            set => SetProperty(ref _groups , value);
+        }
+
+        public ObservableCollection<Group> FilteredGroups
+        {
+            get => _filteredGroups;
+            set => SetProperty(ref _filteredGroups , value);
+        }
+
+        public ObservableCollection<StudyYear> StudyYears
+        {
+            get => _studyYears;
+            set => SetProperty(ref _studyYears , value);
+        }
+
+        public ObservableCollection<Specialty> Specialties
+        {
+            get => _specialties;
+            set => SetProperty(ref _specialties , value);
+        }
+
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                SetProperty(ref _searchText , value);
+                ApplyFilters();
+            }
+        }
+
+        public int? SelectedYearId
+        {
+            get => _selectedYearId;
+            set
+            {
+                SetProperty(ref _selectedYearId , value);
+                ApplyFilters();
+            }
+        }
+
+        public int? SelectedSpecialtyId
+        {
+            get => _selectedSpecialtyId;
+            set
+            {
+                SetProperty(ref _selectedSpecialtyId , value);
+                ApplyFilters();
+            }
+        }
+
+        public string StatusMessage
+        {
+            get => _statusMessage;
+            set => SetProperty(ref _statusMessage , value);
+        }
+
+        public int TotalGroups
+        {
+            get => _totalGroups;
+            set => SetProperty(ref _totalGroups , value);
+        }
+
+        public int ActiveGroups
+        {
+            get => _activeGroups;
+            set => SetProperty(ref _activeGroups , value);
+        }
+
+        // Команды
+        public RelayCommand AddGroupCommand { get; private set; }
+        public RelayCommand RefreshCommand { get; private set; }
+        public RelayCommand ViewGroupCommand { get; private set; }
+        public RelayCommand EditGroupCommand { get; private set; }
+        public RelayCommand DeleteGroupCommand { get; private set; }
+
+        private void InitializeCommands ( )
+        {
+            AddGroupCommand = new RelayCommand(o => AddGroup());
+            RefreshCommand = new RelayCommand(o => LoadData());
+            ViewGroupCommand = new RelayCommand(o => ViewGroup(o as Group));
+            EditGroupCommand = new RelayCommand(o => EditGroup(o as Group));
+            DeleteGroupCommand = new RelayCommand(o => DeleteGroup(o as Group));
+        }
+
+        private void LoadData ( )
+        {
+            try
+            {
+                // Загрузка групп
+                var groups = DatabaseHelper .GetAllGroups();
+                Groups .Clear();
+                foreach ( var group in groups )
+                {
+                    Groups .Add(group);
+                }
+
+                // Загрузка учебных годов
+                var years = DatabaseHelper .GetStudyYears();
+                StudyYears .Clear();
+                StudyYears .Add(new StudyYear { YearId = 0 , YearName = "Все курсы" });
+                foreach ( var year in years )
+                {
+                    StudyYears .Add(year);
+                }
+
+                // Загрузка специальностей
+                var specialties = DatabaseHelper .GetAllSpecialties();
+                Specialties .Clear();
+                Specialties .Add(new Specialty { SpecialtyId = 0 , SpecialtyName = "Все специальности" });
+                foreach ( var specialty in specialties )
+                {
+                    Specialties .Add(specialty);
+                }
+
+                ApplyFilters();
+                UpdateStatistics();
+                StatusMessage = $"Данные загружены успешно. Всего групп: {Groups .Count}";
+            }
+            catch ( Exception ex )
+            {
+                StatusMessage = $"Ошибка загрузки данных: {ex .Message}";
+                MessageBox .Show($"Ошибка загрузки данных: {ex .Message}" , "Ошибка" ,
+                    MessageBoxButton .OK , MessageBoxImage .Error);
+            }
+        }
+
+        private void ApplyFilters ( )
+        {
+            if ( Groups == null ) return;
+
+            var filtered = Groups .AsEnumerable();
+
+            // Фильтр по курсу
+            if ( SelectedYearId .HasValue && SelectedYearId .Value > 0 )
+            {
+                filtered = filtered .Where(g => g .CurrentYear == SelectedYearId .Value);
+            }
+
+            // Фильтр по специальности
+            if ( SelectedSpecialtyId .HasValue && SelectedSpecialtyId .Value > 0 )
+            {
+                filtered = filtered .Where(g => g .SpecialtyId == SelectedSpecialtyId .Value);
+            }
+
+            // Фильтр по поисковому запросу
+            if ( !string .IsNullOrWhiteSpace(SearchText) )
+            {
+                var searchLower = SearchText .ToLower();
+                filtered = filtered .Where(g =>
+                    g .GroupName .ToLower() .Contains(searchLower) ||
+                    (g .Specialty?.SpecialtyName?.ToLower() .Contains(searchLower) ?? false));
+            }
+
+            FilteredGroups .Clear();
+            foreach ( var group in filtered )
+            {
+                FilteredGroups .Add(group);
+            }
+
+            UpdateStatistics();
+        }
+
+        private void UpdateStatistics ( )
+        {
+            TotalGroups = FilteredGroups .Count;
+            ActiveGroups = FilteredGroups .Count(g => g .IsActive ?? true);
+        }
+
+        private void AddGroup ( )
+        {
+            try
+            {
+                // Здесь будет логика открытия диалога добавления группы
+                var newGroup = new Group
+                {
+                    GroupName = "Новая группа" ,
+                    EnrollmentYear = DateTime .Now .Year ,
+                    CurrentYear = 1 ,
+                    IsActive = true ,
+                    CreatedDate = DateTime .Now
+                };
+
+                // Временная реализация - просто добавляем в коллекцию
+                Groups .Add(newGroup);
+                ApplyFilters();
+                StatusMessage = "Новая группа добавлена (временно в память)";
+
+                MessageBox .Show("Функционал добавления группы будет реализован в следующем обновлении" ,
+                    "Информация" , MessageBoxButton .OK , MessageBoxImage .Information);
+            }
+            catch ( Exception ex )
+            {
+                StatusMessage = $"Ошибка при добавлении группы: {ex .Message}";
+                MessageBox .Show($"Ошибка при добавлении группы: {ex .Message}" , "Ошибка" ,
+                    MessageBoxButton .OK , MessageBoxImage .Error);
+            }
+        }
+
+        private void ViewGroup (Group group)
+        {
+            if ( group == null ) return;
+
+            try
+            {
+                // Здесь будет логика просмотра деталей группы
+                string message = $"Группа: {group .GroupName}\n" +
+                               $"Курс: {group .CurrentYear}\n" +
+                               $"Год поступления: {group .EnrollmentYear}\n" +
+                               $"Количество студентов: {group .StudentCount ?? 0}\n" +
+                               $"Статус: {(group .IsActive ?? true ? "Активна" : "Неактивна")}";
+
+                MessageBox .Show(message , "Просмотр группы" ,
+                    MessageBoxButton .OK , MessageBoxImage .Information);
+
+                StatusMessage = $"Просмотр группы: {group .GroupName}";
+            }
+            catch ( Exception ex )
+            {
+                StatusMessage = $"Ошибка при просмотре группы: {ex .Message}";
+            }
+        }
+
+        private void EditGroup (Group group)
+        {
+            if ( group == null ) return;
+
+            try
+            {
+                // Здесь будет логика открытия диалога редактирования
+                string originalName = group .GroupName;
+                group .GroupName = $"{group .GroupName} (изменено)";
+
+                ApplyFilters();
+                StatusMessage = $"Группа '{originalName}' отмечена для редактирования";
+
+                MessageBox .Show("Функционал редактирования группы будет реализован в следующем обновлении" ,
+                    "Информация" , MessageBoxButton .OK , MessageBoxImage .Information);
+            }
+            catch ( Exception ex )
+            {
+                StatusMessage = $"Ошибка при редактировании группы: {ex .Message}";
+                MessageBox .Show($"Ошибка при редактировании группы: {ex .Message}" , "Ошибка" ,
+                    MessageBoxButton .OK , MessageBoxImage .Error);
+            }
+        }
+
+        private void DeleteGroup (Group group)
+        {
+            if ( group == null ) return;
+
+            var result = MessageBox .Show(
+                $"Вы уверены, что хотите удалить группу '{group .GroupName}'?\n\n" +
+                "Это действие нельзя будет отменить." ,
+                "Подтверждение удаления" ,
+                MessageBoxButton .YesNo ,
+                MessageBoxImage .Warning);
+
+            if ( result == MessageBoxResult .Yes )
+            {
+                try
+                {
+                    // Временная реализация - удаляем только из коллекции
+                    Groups .Remove(group);
+                    ApplyFilters();
+                    StatusMessage = $"Группа '{group .GroupName}' удалена (временно из памяти)";
+
+                    MessageBox .Show("Функционал полного удаления из БД будет реализован в следующем обновлении" ,
+                        "Информация" , MessageBoxButton .OK , MessageBoxImage .Information);
+                }
+                catch ( Exception ex )
+                {
+                    StatusMessage = $"Ошибка при удалении группы: {ex .Message}";
+                    MessageBox .Show($"Ошибка при удалении группы: {ex .Message}" , "Ошибка" ,
+                        MessageBoxButton .OK , MessageBoxImage .Error);
+                }
+            }
+        }
+    }
+}
+
+using ScheduleAppDemo .Core;
+using ScheduleAppDemo .MVVM .Model;
+using ScheduleAppDemo .MVVM .View;
+using System;
+using System .Collections .Generic;
+using System .Linq;
+using System .Text;
+using System .Threading .Tasks;
+using System .Windows;
+using System .Windows .Controls;
+
+namespace ScheduleAppDemo .MVVM .ViewModel
+{
+   public class LoginViewModel : ObservableObject
+    {
+        private MainViewModel _mainViewModel;
+        private string _userLogin;
+        public string AdminName { get; private set; }
+        public string UserLogin
+        {
+            get => _userLogin;
+            set
+            {
+                _userLogin = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public RelayCommand LoginCommand { get; set; }
+        public RelayCommand CancelCommand { get; set; }
+        public LoginViewModel (MainViewModel mainViewModel)
+        {
+            _mainViewModel = mainViewModel;
+            LoginCommand = new RelayCommand(LoginExecute);
+            CancelCommand = new RelayCommand(CancelExecute);
+        }
+
+        private void LoginExecute (object obj)
+        {
+            if ( obj is PasswordBox passwordBox )
+            {
+                string password = passwordBox .Password;
+
+                // Быстрая проверка заполненности
+                if ( string .IsNullOrEmpty(UserLogin) || string .IsNullOrEmpty(password) )
+                {
+                    MessageBox .Show("Введите логин и пароль");
+                    return;
+                }
+
+                // Получаем информацию об администраторе (включая имя)
+                var adminInfo = DatabaseHelper .GetAdminInfo(UserLogin , password);
+                if ( adminInfo != null )
+                {
+                    _mainViewModel .IsAuthenticated = true;
+                    _mainViewModel .CurrentAdminName = adminInfo .AdminName; // Передаем имя
+                    _mainViewModel .ShowNewsView();
+                }
+                else
+                {
+                    MessageBox .Show("Неверный логин или пароль");
+                }
+            }
+        }
+        private void CancelExecute (object obj)
+        {
+            UserLogin = string .Empty;
+            if ( obj is PasswordBox passwordBox )
+            {
+                passwordBox .Password = string .Empty;
+            }
+        }
+    }
+}
+
+
+using ScheduleAppDemo .Core;
+using ScheduleAppDemo .MVVM .Model;
+using ScheduleAppDemo .MVVM .Model .Entities;
+using ScheduleAppDemo .Services;
+using System;
+using System .Collections .Generic;
+using System .Collections .ObjectModel;
+using System .Linq;
+using System .Windows;
+using System .Windows .Input;
 
 namespace ScheduleAppDemo .MVVM .ViewModel
 {
@@ -1481,7 +2416,7 @@ namespace ScheduleAppDemo .MVVM .ViewModel
 
         public StudyYear SelectedCourse
         {
-            get => _selectedCourse;
+            get { return _selectedCourse; }
             set
             {
                 if ( SetProperty(ref _selectedCourse , value) )
@@ -1493,7 +2428,7 @@ namespace ScheduleAppDemo .MVVM .ViewModel
 
         public Specialty SelectedSpecialty
         {
-            get => _selectedSpecialty;
+            get { return _selectedSpecialty; }
             set
             {
                 if ( SetProperty(ref _selectedSpecialty , value) )
@@ -1505,13 +2440,13 @@ namespace ScheduleAppDemo .MVVM .ViewModel
 
         public Group SelectedGroup
         {
-            get => _selectedGroup;
+            get { return _selectedGroup; }
             set
             {
                 if ( SetProperty(ref _selectedGroup , value) )
                 {
-                    // Обновляем состояние команды
                     CommandManager .InvalidateRequerySuggested();
+                    LoadSchedule();
                 }
             }
         }
@@ -1521,6 +2456,7 @@ namespace ScheduleAppDemo .MVVM .ViewModel
 
         // Команды
         public ICommand LoadScheduleCommand { get; }
+        public ICommand RefreshCommand { get; }
 
         // Кэшированные данные для быстрого доступа
         private List<TimeSlot> _timeSlots;
@@ -1540,6 +2476,14 @@ namespace ScheduleAppDemo .MVVM .ViewModel
                 canExecute: _ => SelectedGroup != null
             );
 
+            RefreshCommand = new RelayCommand(_ => RefreshData());
+
+            // Подписываемся на события обновления расписания (ОДИН РАЗ)
+            ScheduleSyncService .Instance .ScheduleUpdated += OnScheduleUpdated;
+
+            // Отладочное сообщение
+            System .Diagnostics .Debug .WriteLine("MainScheduleViewModel создан");
+
             LoadInitialData();
         }
 
@@ -1547,6 +2491,8 @@ namespace ScheduleAppDemo .MVVM .ViewModel
         {
             try
             {
+                System .Diagnostics .Debug .WriteLine("Начало загрузки данных...");
+
                 // Загружаем курсы
                 var courses = DatabaseHelper .GetStudyYears();
                 Courses .Clear();
@@ -1554,15 +2500,29 @@ namespace ScheduleAppDemo .MVVM .ViewModel
                 {
                     Courses .Add(course);
                 }
+                System .Diagnostics .Debug .WriteLine($"Загружено курсов: {Courses .Count}");
 
                 // Предзагружаем данные для быстрого доступа
                 _timeSlots = DatabaseHelper .GetTimeSlots();
                 _subjects = DatabaseHelper .GetAllSubjects();
                 _teachers = DatabaseHelper .GetAllTeachers();
                 _classrooms = DatabaseHelper .GetAllClassrooms();
+
+                System .Diagnostics .Debug .WriteLine($"Загружено временных слотов: {_timeSlots?.Count ?? 0}");
+                System .Diagnostics .Debug .WriteLine($"Загружено предметов: {_subjects?.Count ?? 0}");
+                System .Diagnostics .Debug .WriteLine($"Загружено преподавателей: {_teachers?.Count ?? 0}");
+                System .Diagnostics .Debug .WriteLine($"Загружено аудиторий: {_classrooms?.Count ?? 0}");
+
+                // Устанавливаем первый курс по умолчанию, если есть данные
+                if ( Courses .Count > 0 )
+                {
+                    SelectedCourse = Courses[0];
+                }
+
             }
             catch ( Exception ex )
             {
+                System .Diagnostics .Debug .WriteLine($"Ошибка загрузки данных: {ex .Message}");
                 MessageBox .Show($"Ошибка загрузки данных: {ex .Message}");
             }
         }
@@ -1573,6 +2533,8 @@ namespace ScheduleAppDemo .MVVM .ViewModel
 
             try
             {
+                System .Diagnostics .Debug .WriteLine($"Выбран курс: {SelectedCourse .YearNumber}");
+
                 // Загружаем специальности для выбранного курса
                 var specialties = DatabaseHelper .GetSpecialtiesByYear(SelectedCourse .YearNumber);
                 Specialties .Clear();
@@ -1580,15 +2542,24 @@ namespace ScheduleAppDemo .MVVM .ViewModel
                 {
                     Specialties .Add(specialty);
                 }
+                System .Diagnostics .Debug .WriteLine($"Загружено специальностей: {Specialties .Count}");
 
                 // Очищаем группы
                 Groups .Clear();
                 SelectedSpecialty = null;
                 SelectedGroup = null;
                 ScheduleRows .Clear();
+
+                // Устанавливаем первую специальность по умолчанию, если есть
+                if ( Specialties .Count > 0 )
+                {
+                    SelectedSpecialty = Specialties[0];
+                }
+
             }
             catch ( Exception ex )
             {
+                System .Diagnostics .Debug .WriteLine($"Ошибка загрузки специальностей: {ex .Message}");
                 MessageBox .Show($"Ошибка загрузки специальностей: {ex .Message}");
             }
         }
@@ -1599,6 +2570,8 @@ namespace ScheduleAppDemo .MVVM .ViewModel
 
             try
             {
+                System .Diagnostics .Debug .WriteLine($"Выбрана специальность: {SelectedSpecialty .SpecialtyName}");
+
                 // Загружаем группы для выбранной специальности и курса
                 var groups = DatabaseHelper .GetGroupsBySpecialtyAndYear(
                     SelectedSpecialty .SpecialtyId ,
@@ -1610,12 +2583,21 @@ namespace ScheduleAppDemo .MVVM .ViewModel
                 {
                     Groups .Add(group);
                 }
+                System .Diagnostics .Debug .WriteLine($"Загружено групп: {Groups .Count}");
 
                 SelectedGroup = null;
                 ScheduleRows .Clear();
+
+                // Устанавливаем первую группу по умолчанию, если есть
+                if ( Groups .Count > 0 )
+                {
+                    SelectedGroup = Groups[0];
+                }
+
             }
             catch ( Exception ex )
             {
+                System .Diagnostics .Debug .WriteLine($"Ошибка загрузки групп: {ex .Message}");
                 MessageBox .Show($"Ошибка загрузки групп: {ex .Message}");
             }
         }
@@ -1626,8 +2608,11 @@ namespace ScheduleAppDemo .MVVM .ViewModel
 
             try
             {
+                System .Diagnostics .Debug .WriteLine($"Загрузка расписания для группы: {SelectedGroup .GroupName}");
+
                 // 1. Получаем Entity расписания из БД
                 var scheduleEntities = DatabaseHelper .GetScheduleForGroup(SelectedGroup .GroupId);
+                System .Diagnostics .Debug .WriteLine($"Найдено занятий в БД: {scheduleEntities .Count}");
 
                 // 2. Преобразуем в ScheduleRow для DataGrid
                 var scheduleRows = ConvertToScheduleRows(scheduleEntities);
@@ -1639,19 +2624,49 @@ namespace ScheduleAppDemo .MVVM .ViewModel
                     ScheduleRows .Add(row);
                 }
 
-                MessageBox .Show($"✅ Расписание загружено для группы {SelectedGroup .GroupName}\nНайдено {scheduleEntities .Count} занятий");
+                System .Diagnostics .Debug .WriteLine($"Загружено строк расписания: {ScheduleRows .Count}");
+
             }
             catch ( Exception ex )
             {
+                System .Diagnostics .Debug .WriteLine($"❌ Ошибка загрузки расписания: {ex .Message}");
                 MessageBox .Show($"❌ Ошибка загрузки расписания: {ex .Message}");
             }
         }
+
+        private void OnScheduleUpdated (Group updatedGroup)
+        {
+            System .Diagnostics .Debug .WriteLine($"Получено уведомление об обновлении для группы: {updatedGroup?.GroupName}");
+
+            // Если обновилось расписание для текущей выбранной группы, перезагружаем
+            if ( SelectedGroup != null && updatedGroup != null && SelectedGroup .GroupId == updatedGroup .GroupId )
+            {
+                System .Diagnostics .Debug .WriteLine("Автоматическое обновление расписания...");
+                LoadSchedule();
+                MessageBox .Show($"Расписание для группы {updatedGroup .GroupName} обновлено!" , "Обновление" ,
+                    MessageBoxButton .OK , MessageBoxImage .Information);
+            }
+        }
+
+        private void RefreshData ( )
+        {
+            System .Diagnostics .Debug .WriteLine("Принудительное обновление данных...");
+
+            // Перезагружаем все данные
+            LoadInitialData();
+            if ( SelectedGroup != null )
+            {
+                LoadSchedule();
+            }
+        }
+
         private List<ScheduleRow> ConvertToScheduleRows (List<Schedule> scheduleEntities)
         {
             var rows = new List<ScheduleRow>();
 
             if ( _timeSlots == null || _timeSlots .Count == 0 )
             {
+                System .Diagnostics .Debug .WriteLine("Временные слоты не загружены");
                 MessageBox .Show("Временные слоты не загружены");
                 return rows;
             }
@@ -1676,11 +2691,17 @@ namespace ScheduleAppDemo .MVVM .ViewModel
                         var lessonCell = CreateLessonCell(lesson);
                         SetDayCell(row , day , lessonCell);
                     }
+                    else
+                    {
+                        // Создаем пустую ячейку
+                        SetDayCell(row , day , new LessonCell());
+                    }
                 }
 
                 rows .Add(row);
             }
 
+            System .Diagnostics .Debug .WriteLine($"Создано строк расписания: {rows .Count}");
             return rows;
         }
 
@@ -1736,7 +2757,6 @@ namespace ScheduleAppDemo .MVVM .ViewModel
 
         private string GetLessonColor (int? categoryId)
         {
-
             if ( categoryId == null ) return "#F5F5F5";
 
             switch ( categoryId .Value )
@@ -1757,22 +2777,12 @@ namespace ScheduleAppDemo .MVVM .ViewModel
 using ScheduleAppDemo .Core;
 using ScheduleAppDemo .MVVM .View;
 using System;
-using System .Collections .Generic;
-using System .ComponentModel;
-using System .IO .Packaging;
-using System .Linq;
-using System .Reflection .Emit;
-using System .Runtime .CompilerServices;
-using System .Text;
-using System .Threading .Tasks;
 using System .Windows;
 using System .Windows .Input;
 
 namespace ScheduleAppDemo .MVVM .ViewModel
 {
-
-
-     public class MainViewModel : ObservableObject
+    public class MainViewModel : ObservableObject
     {
         // Команды
         public RelayCommand CloseAppCommand { get; set; }
@@ -1788,6 +2798,7 @@ namespace ScheduleAppDemo .MVVM .ViewModel
         public MainScheduleViewModel MainScheduleVM { get; set; }
         public NewsViewModel NewsVM { get; set; }
         public ScheduleEditorViewModel ScheduleEditorVM { get; set; }
+        public GroupsViewModel GroupsVM { get; set; }
 
         // Состояние кнопок
         private bool _isMainScheduleActive = false;
@@ -1819,62 +2830,134 @@ namespace ScheduleAppDemo .MVVM .ViewModel
             set => SetProperty(ref _isInfoEditorActive , value);
         }
 
+        // Текущее состояние приложения
+        private string _currentAdminName;
+        public string CurrentAdminName
+        {
+            get => _currentAdminName;
+            set => SetProperty(ref _currentAdminName , value);
+        }
+
+        private bool _isAuthenticated = false;
+        public bool IsAuthenticated
+        {
+            get => _isAuthenticated;
+            set
+            {
+                if ( SetProperty(ref _isAuthenticated , value) )
+                {
+                    // При изменении статуса аутентификации обновляем доступность команд
+                    OnPropertyChanged(nameof(IsAuthenticated));
+
+                    // Если вышли из системы, переходим на экран логина
+                    if ( !value )
+                    {
+                        CurrentView = LoginView;
+                        ResetAllButtons();
+                    }
+                }
+            }
+        }
+
+        private object _currentView;
+        public object CurrentView
+        {
+            get => _currentView;
+            set
+            {
+                if ( SetProperty(ref _currentView , value) )
+                {
+                    System .Diagnostics .Debug .WriteLine($"CurrentView changed to: {value?.GetType() .Name}");
+
+                    // Обновляем заголовок окна в зависимости от текущего View
+                    UpdateWindowTitle();
+                }
+            }
+        }
+
         public MainViewModel ( )
         {
             // Инициализация ViewModels
-            LoginView = new LoginViewModel(this);
-            MainScheduleVM = new MainScheduleViewModel();
-            NewsVM = new NewsViewModel(this);
-            ScheduleEditorVM = new ScheduleEditorViewModel();
+            InitializeViewModels();
 
             // Стартовое окно - логин
             CurrentView = LoginView;
 
-            // Инициализация команд с ПРАВИЛЬНЫМ обновлением состояния
+            // Инициализация команд
             InitializeCommands();
 
-            CloseAppCommand = new RelayCommand(o => Application .Current .Shutdown());
+            // Установка заголовка окна
+            UpdateWindowTitle();
+        }
+
+        private void InitializeViewModels ( )
+        {
+            LoginView = new LoginViewModel(this);
+            MainScheduleVM = new MainScheduleViewModel();
+            NewsVM = new NewsViewModel(this);
+            ScheduleEditorVM = new ScheduleEditorViewModel();
+            GroupsVM = new GroupsViewModel();
         }
 
         private void InitializeCommands ( )
         {
+            CloseAppCommand = new RelayCommand(o => Application .Current .Shutdown());
+
             LoginViewCommand = new RelayCommand(o =>
             {
-                CurrentView = LoginView;
-                ResetAllButtons();
+                if ( CurrentView != LoginView )
+                {
+                    CurrentView = LoginView;
+                    ResetAllButtons();
+                }
             });
 
             MainScheduleViewCommand = new RelayCommand(o =>
             {
-                CurrentView = MainScheduleVM;
-                SetActiveButton("MainSchedule");
-            });
+                if ( CurrentView != MainScheduleVM )
+                {
+                    CurrentView = MainScheduleVM;
+                    SetActiveButton("MainSchedule");
+                }
+            } , o => IsAuthenticated); // Команда доступна только для аутентифицированных пользователей
 
             ScheduleEditorViewCommand = new RelayCommand(o =>
             {
-                CurrentView = ScheduleEditorVM;
-                SetActiveButton("ScheduleEditor");
-            });
+                if ( CurrentView != ScheduleEditorVM )
+                {
+                    CurrentView = ScheduleEditorVM;
+                    SetActiveButton("ScheduleEditor");
+                }
+            } , o => IsAuthenticated);
 
             NewsViewCommand = new RelayCommand(o =>
             {
-                CurrentView = NewsVM;
-                ResetAllButtons();
-            });
+                if ( CurrentView != NewsVM )
+                {
+                    CurrentView = NewsVM;
+                    ResetAllButtons();
+                }
+            } , o => IsAuthenticated);
 
             GroupsViewCommand = new RelayCommand(o =>
             {
-                // Временная заглушка - используем MainSchedule
-                CurrentView = MainScheduleVM;
-                SetActiveButton("Groups");
-            });
+                if ( CurrentView != GroupsVM )
+                {
+                    CurrentView = GroupsVM;
+                    SetActiveButton("Groups");
+                }
+            } , o => IsAuthenticated);
 
             InfoEditorViewCommand = new RelayCommand(o =>
             {
                 // Временная заглушка - используем ScheduleEditor
-                CurrentView = ScheduleEditorVM;
-                SetActiveButton("InfoEditor");
-            });
+                // TODO: Заменить на реальный InfoEditorViewModel когда будет готов
+                if ( CurrentView != ScheduleEditorVM )
+                {
+                    CurrentView = ScheduleEditorVM;
+                    SetActiveButton("InfoEditor");
+                }
+            } , o => IsAuthenticated);
         }
 
         private void SetActiveButton (string buttonName)
@@ -1908,32 +2991,16 @@ namespace ScheduleAppDemo .MVVM .ViewModel
             IsInfoEditorActive = false;
         }
 
-        private string _currentAdminName;
-        public string CurrentAdminName
+        private void UpdateWindowTitle ( )
         {
-            get => _currentAdminName;
-            set => SetProperty(ref _currentAdminName , value);
+            string viewName = CurrentView?.GetType() .Name .Replace("ViewModel" , "") ?? "Unknown";
+            string adminInfo = !string .IsNullOrEmpty(CurrentAdminName) ? $" - {CurrentAdminName}" : "";
+
+            // Здесь можно обновить заголовок окна, если нужно
+            // Application.Current.MainWindow.Title = $"Schedule App - {viewName}{adminInfo}";
         }
 
-        private bool _isAuthenticated = false;
-        public bool IsAuthenticated
-        {
-            get => _isAuthenticated;
-            set => SetProperty(ref _isAuthenticated , value);
-        }
-
-        private object _currentView;
-        public object CurrentView
-        {
-            get => _currentView;
-            set
-            {
-                _currentView = value;
-                OnPropertyChanged();
-                System .Diagnostics .Debug .WriteLine($"CurrentView changed to: {value?.GetType() .Name}");
-            }
-        }
-
+        // Методы для навигации из других ViewModels
         public void ShowNewsView ( )
         {
             CurrentView = NewsVM;
@@ -1941,18 +3008,67 @@ namespace ScheduleAppDemo .MVVM .ViewModel
             ResetAllButtons(); // Сбрасываем кнопки при переходе на новости
         }
 
-        // Метод для принудительного перехода на основное расписание
         public void ShowMainSchedule ( )
         {
             CurrentView = MainScheduleVM;
             SetActiveButton("MainSchedule");
         }
+
+        public void ShowLoginView ( )
+        {
+            CurrentView = LoginView;
+            IsAuthenticated = false;
+            CurrentAdminName = string .Empty;
+            ResetAllButtons();
+        }
+
+        // Метод для успешной аутентификации
+        public void OnAuthenticationSuccess (string adminName)
+        {
+            CurrentAdminName = adminName;
+            IsAuthenticated = true;
+            ShowNewsView(); // Переходим на новости после успешного входа
+        }
+
+        // Метод для выхода из системы
+        public void Logout ( )
+        {
+            IsAuthenticated = false;
+            CurrentAdminName = string .Empty;
+            ShowLoginView();
+        }
     }
 }
+
+
+
+namespace ScheduleAppDemo .MVVM .ViewModel
+{
+   public  class NewsViewModel : ObservableObject
+    {
+        private MainViewModel _mainViewModel;
+
+        public string AdminName => _mainViewModel?.CurrentAdminName;
+
+        // Добавьте конструктор с MainViewModel
+        public NewsViewModel (MainViewModel mainViewModel)
+        {
+            _mainViewModel = mainViewModel;
+        }
+
+        // Уберите пустой конструктор или сделайте его private
+        private NewsViewModel ( )
+        {
+        }
+    }
+
+}
+
 using ScheduleAppDemo .Core;
 using ScheduleAppDemo .MVVM .Model;
 using ScheduleAppDemo .MVVM .Model .Entities;
 using ScheduleAppDemo .MVVM .View;
+using ScheduleAppDemo .Services;
 using System;
 using System .Collections .Generic;
 using System .Collections .ObjectModel;
@@ -2215,10 +3331,14 @@ namespace ScheduleAppDemo .MVVM .ViewModel
 
             try
             {
-                // TODO: Реализовать сохранение в БД
-                // 1. Удалить старое расписание группы
-                // 2. Сохранить новое расписание
+                System .Diagnostics .Debug .WriteLine("=== НАЧАЛО СОХРАНЕНИЯ РАСПИСАНИЯ ===");
+                System .Diagnostics .Debug .WriteLine($"Сохраняем расписание для группы: {SelectedGroup .GroupName} (ID: {SelectedGroup .GroupId})");
 
+                // 1. Удаляем старое расписание группы
+                System .Diagnostics .Debug .WriteLine("Удаляем старое расписание...");
+                DatabaseHelper .DeleteScheduleForGroup(SelectedGroup .GroupId);
+
+                // 2. Сохраняем новое расписание
                 int lessonCount = 0;
                 foreach ( var row in ScheduleTable )
                 {
@@ -2227,17 +3347,39 @@ namespace ScheduleAppDemo .MVVM .ViewModel
                         var cell = GetDayCell(row , day);
                         if ( cell?.SubjectId != null && cell .TeacherId != null && cell .ClassroomId != null )
                         {
+                            var schedule = new Schedule
+                            {
+                                GroupId = SelectedGroup .GroupId ,
+                                TimeslotId = row .TimeSlotId ,
+                                DayOfWeek = day ,
+                                SubjectId = cell .SubjectId .Value ,
+                                TeacherId = cell .TeacherId .Value ,
+                                ClassroomId = cell .ClassroomId .Value ,
+                                IsRemote = cell .IsRemote
+                            };
+
+                            System .Diagnostics .Debug .WriteLine($"Добавляем занятие: {cell .SubjectName}, день {day}, пара {row .TimeSlotId}");
+                            DatabaseHelper .AddScheduleItem(schedule);
                             lessonCount++;
-                            // DatabaseHelper.AddScheduleItem(...);
                         }
                     }
                 }
 
+                System .Diagnostics .Debug .WriteLine($"Сохранено занятий: {lessonCount}");
+
+                // 3. Уведомляем об обновлении расписания
+                System .Diagnostics .Debug .WriteLine("Отправляем уведомление об обновлении...");
+                ScheduleSyncService .Instance .NotifyScheduleUpdated(SelectedGroup);
+
                 MessageBox .Show($"Расписание для группы {SelectedGroup .GroupName} сохранено!\n" +
-                              $"Добавлено занятий: {lessonCount}" , "Успех");
+                              $"Добавлено занятий: {lessonCount}" , "Успех" ,
+                              MessageBoxButton .OK , MessageBoxImage .Information);
+
+                System .Diagnostics .Debug .WriteLine("=== СОХРАНЕНИЕ ЗАВЕРШЕНО ===");
             }
-            catch ( System .Exception ex )
+            catch ( Exception ex )
             {
+                System .Diagnostics .Debug .WriteLine($"ОШИБКА СОХРАНЕНИЯ: {ex .Message}");
                 MessageBox .Show($"Ошибка сохранения: {ex .Message}" , "Ошибка");
             }
         }
@@ -2283,7 +3425,10 @@ namespace ScheduleAppDemo .MVVM .ViewModel
         }
     }
 }
-MAINWINDOW
+
+отдельная папка Theme для создания стилей кнопок и тд.
+
+MAIN WINDOW : 
 <Window x:Class="ScheduleAppDemo.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -2303,7 +3448,7 @@ xmlns:view="clr-namespace:ScheduleAppDemo.MVVM.View"
   
     <Border 
         CornerRadius="25"
-        Background="Black">
+        Background="#FF010010">
 
         <Grid Background="Transparent">
             <Grid.ColumnDefinitions>
@@ -2370,20 +3515,7 @@ xmlns:view="clr-namespace:ScheduleAppDemo.MVVM.View"
                  FontFamily="Bernard MT Condensed"
                  IsEnabled="{Binding IsAuthenticated}"/>
 
-                <!-- Редактор информации -->
-                <RadioButton Content="🛠 Редактор информации"
-                 Command="{Binding InfoEditorViewCommand}"
-                 IsChecked="{Binding IsInfoEditorActive}"
-                 Height="75" 
-                 FontSize="24" 
-                 HorizontalAlignment="Left" 
-                 Margin="0,10,0,0"
-                 Width="295"
-                 Style="{StaticResource MenuButtonTheme}" 
-                 BorderThickness="0,0,0,30" 
-                 Foreground="White" 
-                 FontFamily="Bernard MT Condensed"
-                 IsEnabled="{Binding IsAuthenticated}"/>
+             
             </StackPanel>
             <ContentControl
               Grid.Row="1"
@@ -2425,6 +3557,26 @@ xmlns:view="clr-namespace:ScheduleAppDemo.MVVM.View"
     </Border>
 </Window>
 
+using ScheduleAppDemo .MVVM .ViewModel;
+using System;
+using System .Collections .Generic;
+using System .Linq;
+using System .Text;
+using System .Threading .Tasks;
+using System .Windows;
+using System .Windows .Controls;
+using System .Windows .Data;
+using System .Windows .Documents;
+using System .Windows .Input;
+using System .Windows .Media;
+using System .Windows .Media .Imaging;
+using System .Windows .Navigation;
+using System .Windows .Shapes;
+
+namespace ScheduleAppDemo
+{
+    /// <summary>
+    /// Логика взаимодействия для MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
@@ -2440,5 +3592,11 @@ xmlns:view="clr-namespace:ScheduleAppDemo.MVVM.View"
         }
     }
 }
+
+
+
+
+
+
 
 
